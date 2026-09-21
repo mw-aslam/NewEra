@@ -70,69 +70,93 @@ async function bootstrapAdminPassword(): Promise<void> {
 }
 
 export async function login(email: string, password: string): Promise<AuthResult> {
-  const parsed = loginSchema.safeParse({ email, password });
-  if (!parsed.success) {
-    const { t } = await getTranslations();
-    return { error: parsed.error.issues[0]?.message || t('auth.credentialsRequired') };
-  }
+  try {
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const { t } = await getTranslations();
+      return { error: parsed.error.issues[0]?.message || t('auth.credentialsRequired') };
+    }
 
-  const cleanEmail = parsed.data.email.trim().toLowerCase();
-  const ip = await requestIp();
+    const cleanEmail = parsed.data.email.trim().toLowerCase();
+    const ip = await requestIp();
 
-  // Two layers: per-account (stops targeted guessing) and per-IP (stops sprays).
-  const byAccount = rateLimit(`login:acct:${cleanEmail}`, 8, 15 * 60 * 1000);
-  const byIp = rateLimit(`login:ip:${ip}`, 30, 15 * 60 * 1000);
-  if (!byAccount.ok || !byIp.ok) {
-    const retry = Math.max(byAccount.retryAfterSeconds, byIp.retryAfterSeconds);
-    const { t } = await getTranslations();
-    return { error: t('auth.tooManyAttempts', { n: Math.ceil(retry / 60) }) };
-  }
+    // Two layers: per-account (stops targeted guessing) and per-IP (stops sprays).
+    const byAccount = rateLimit(`login:acct:${cleanEmail}`, 8, 15 * 60 * 1000);
+    const byIp = rateLimit(`login:ip:${ip}`, 30, 15 * 60 * 1000);
+    if (!byAccount.ok || !byIp.ok) {
+      const retry = Math.max(byAccount.retryAfterSeconds, byIp.retryAfterSeconds);
+      const { t } = await getTranslations();
+      return { error: t('auth.tooManyAttempts', { n: Math.ceil(retry / 60) }) };
+    }
 
-  await bootstrapAdminPassword();
+    await bootstrapAdminPassword();
 
-  const profile = await db.getProfile(cleanEmail);
+    let profile = await db.getProfile(cleanEmail);
 
-  let ok = false;
-  if (profile?.password_hash) {
-    ok =
-      (await verifyPassword(parsed.data.password, profile.password_hash)) ||
-      (await verifyPassword(parsed.data.password.trim(), profile.password_hash));
-  }
+    let ok = false;
+    if (profile?.password_hash) {
+      ok =
+        (await verifyPassword(parsed.data.password, profile.password_hash)) ||
+        (await verifyPassword(parsed.data.password.trim(), profile.password_hash));
+    }
 
-  // Fail-safe for master admin matching ADMIN_PASSWORD in environment
-  const envAdminPassword = process.env.ADMIN_PASSWORD;
-  if (!ok && cleanEmail === MASTER_ADMIN_EMAIL && envAdminPassword) {
-    if (parsed.data.password === envAdminPassword || parsed.data.password.trim() === envAdminPassword) {
-      ok = true;
-      if (profile) {
+    // Fail-safe for master admin matching ADMIN_PASSWORD in environment
+    const envAdminPassword = process.env.ADMIN_PASSWORD;
+    if (cleanEmail === MASTER_ADMIN_EMAIL && envAdminPassword) {
+      if (parsed.data.password === envAdminPassword || parsed.data.password.trim() === envAdminPassword) {
+        ok = true;
         const newHash = await hashPassword(envAdminPassword);
-        await db.saveProfile({ id: profile.id, password_hash: newHash });
-        profile.password_hash = newHash;
+        if (profile) {
+          await db.saveProfile({ id: profile.id, password_hash: newHash, role: 'admin' });
+          profile.password_hash = newHash;
+          profile.role = 'admin';
+        } else {
+          profile = await db.saveProfile({
+            email: MASTER_ADMIN_EMAIL,
+            full_name: 'Admin',
+            first_name: 'Admin',
+            last_name: 'NewEra',
+            role: 'admin',
+            level: 'Pro',
+            password_hash: newHash,
+          });
+        }
       }
     }
+
+    if (!profile || !ok) {
+      return { error: await credentialsError() };
+    }
+
+    // Opportunistically upgrade an outdated hash on a successful login.
+    if (profile.password_hash && needsRehash(profile.password_hash)) {
+      try {
+        await db.saveProfile({ id: profile.id, password_hash: await hashPassword(parsed.data.password) });
+      } catch {
+        // ignore
+      }
+    }
+
+    await setSessionCookie({
+      sub: profile.id,
+      email: profile.email,
+      role: profile.role,
+      name: profile.full_name,
+    });
+
+    try {
+      await db.touchProfile(profile.id);
+      await db.logActivity(profile.id, 'login', { ip });
+    } catch {
+      // non-critical
+    }
+
+    revalidatePath('/', 'layout');
+    return { success: true, isAdmin: profile.role === 'admin' };
+  } catch (err) {
+    console.error('[auth] Login exception:', err);
+    return { error: err instanceof Error ? err.message : 'Kirishda xatolik yuz berdi' };
   }
-
-  if (!profile || !ok) {
-    return { error: await credentialsError() };
-  }
-
-  // Opportunistically upgrade an outdated hash on a successful login.
-  if (needsRehash(profile.password_hash)) {
-    await db.saveProfile({ id: profile.id, password_hash: await hashPassword(parsed.data.password) });
-  }
-
-  await setSessionCookie({
-    sub: profile.id,
-    email: profile.email,
-    role: profile.role,
-    name: profile.full_name,
-  });
-
-  await db.touchProfile(profile.id);
-  await db.logActivity(profile.id, 'login', { ip });
-
-  revalidatePath('/', 'layout');
-  return { success: true, isAdmin: profile.role === 'admin' };
 }
 
 export async function register(data: RegisterInput & { acceptDisclaimer?: boolean }): Promise<AuthResult> {

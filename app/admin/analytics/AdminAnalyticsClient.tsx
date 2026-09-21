@@ -24,7 +24,8 @@ import {
   Award, 
   Percent,
   CheckCircle2,
-  Calendar
+  Calendar,
+  Wallet
 } from 'lucide-react';
 
 interface AdminAnalyticsClientProps {
@@ -120,12 +121,77 @@ export default function AdminAnalyticsClient({
     ? Math.round(testAttempts.reduce((sum, t) => sum + t.score, 0) / totalTestAttempts)
     : 0;
 
+  const now = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const oneWeekMs = 7 * oneDayMs;
+  const oneMonthMs = 30 * oneDayMs;
+  const oneYearMs = 365 * oneDayMs;
+
+  const dailyRevenue = approvedPayments
+    .filter((p) => now - new Date(p.created_at).getTime() <= oneDayMs)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const weeklyRevenue = approvedPayments
+    .filter((p) => now - new Date(p.created_at).getTime() <= oneWeekMs)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const monthlyRevenue = approvedPayments
+    .filter((p) => now - new Date(p.created_at).getTime() <= oneMonthMs)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const yearlyRevenue = approvedPayments
+    .filter((p) => now - new Date(p.created_at).getTime() <= oneYearMs)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const periodRevenueMetrics = [
+    { name: 'Kunlik Daromad', period: '24 soatlik', value: `${new Intl.NumberFormat('uz-UZ').format(dailyRevenue)} UZS`, badge: 'Kunlik' },
+    { name: 'Haftalik Daromad', period: 'So‘nggi 7 kun', value: `${new Intl.NumberFormat('uz-UZ').format(weeklyRevenue)} UZS`, badge: 'Haftalik' },
+    { name: 'Oylik Daromad', period: 'So‘nggi 30 kun', value: `${new Intl.NumberFormat('uz-UZ').format(monthlyRevenue)} UZS`, badge: 'Oylik' },
+    { name: 'Yillik Daromad', period: 'So‘nggi 365 kun', value: `${new Intl.NumberFormat('uz-UZ').format(yearlyRevenue)} UZS`, badge: 'Yillik' },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="pb-6 border-b border-white/10">
         <h1 className="text-3xl font-black text-white tracking-tight">Platforma Chuqur Analitikasi</h1>
         <p className="text-white/50 text-sm">Daromad oqimi, konversiya, talabalar faolligi va test ko&apos;rsatkichlari.</p>
+      </div>
+
+      {/* 4-Period Revenue Breakdown */}
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-base font-black text-white flex items-center gap-2">
+            <Wallet size={18} className="text-white" />
+            Daromad Tahlili (Kunlik / Haftalik / Oylik / Yillik)
+          </h2>
+          <p className="text-xs text-white/50 mt-0.5">Tasdiqlangan to&apos;lovlar bo&apos;yicha aniq davriy daromad</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {periodRevenueMetrics.map((r, idx) => (
+            <div
+              key={idx}
+              className="bg-[#000000] border border-white/15 rounded-3xl p-6 shadow-2xl hover:border-white/35 transition relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/10 text-white border border-white/20">
+                  {r.badge}
+                </span>
+                <Calendar size={16} className="text-white/40" />
+              </div>
+              <div className="text-xs font-mono uppercase text-white/50 tracking-wider mb-1 font-bold">
+                {r.name}
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
+                {r.value}
+              </div>
+              <div className="text-[11px] text-white/40 font-mono mt-1.5">
+                {r.period}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Top 4 KPI Metrics */}

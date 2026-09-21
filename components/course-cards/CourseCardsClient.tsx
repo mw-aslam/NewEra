@@ -143,7 +143,6 @@ export default function CourseCardsClient({
 }: CourseCardsClientProps) {
   const { locale } = useI18n();
   const tUi = UI_TEXT[locale] || UI_TEXT.uz;
-  const [billingPeriod, setBillingPeriod] = useState<'daily' | 'monthly' | 'yearly'>('monthly');
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
 
   const formatPrice = (value: number) =>
@@ -177,66 +176,13 @@ export default function CourseCardsClient({
           </h2>
           <p className="mt-3 text-sm font-semibold text-white/60">{bestOrder}</p>
           <p className="mt-1 text-[13px] text-white/35">{bestOrderSub}</p>
-
-          {/* Billing Period Selector */}
-          <div className="mt-8 inline-flex items-center rounded-2xl border border-white/15 bg-white/[0.04] p-1.5 backdrop-blur-xl">
-            <button
-              onClick={() => setBillingPeriod('daily')}
-              className={`rounded-xl px-4 py-2 text-xs font-mono font-bold uppercase transition ${
-                billingPeriod === 'daily'
-                  ? 'bg-white text-black font-black shadow-lg'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {tUi.daily}
-            </button>
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              className={`relative rounded-xl px-5 py-2 text-xs font-mono font-bold uppercase transition ${
-                billingPeriod === 'monthly'
-                  ? 'bg-white text-black font-black shadow-lg'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {tUi.monthly}
-              <span className="ml-1.5 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-black text-emerald-400 border border-emerald-500/30">
-                {tUi.recommended}
-              </span>
-            </button>
-            <button
-              onClick={() => setBillingPeriod('yearly')}
-              className={`rounded-xl px-4 py-2 text-xs font-mono font-bold uppercase transition ${
-                billingPeriod === 'yearly'
-                  ? 'bg-white text-black font-black shadow-lg'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {tUi.yearly}
-              <span className="ml-1 text-[9px] text-pink-400 font-bold">-25%</span>
-            </button>
-          </div>
         </header>
 
         {/* 2-Card Grid: Standart & Pro only */}
         <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto items-start">
-          {courses.map(({ content, note, published, pricing }) => {
+          {courses.map(({ content, note, published }) => {
             const isPro = content.slug === 'pro';
-            const price = pricing[billingPeriod] || content.price;
-
-            const periodLabel =
-              billingPeriod === 'daily'
-                ? tUi.perDay
-                : billingPeriod === 'yearly'
-                  ? tUi.perYear
-                  : tUi.perMonth;
-
-            const durationText =
-              billingPeriod === 'daily'
-                ? tUi.durationDay
-                : billingPeriod === 'yearly'
-                  ? tUi.durationYear
-                  : tUi.durationMonth;
-
+            const price = content.price;
             const highlights = isPro ? tUi.highlights.pro : tUi.highlights.standard;
             const isExpanded = !!expandedModules[content.slug];
 
@@ -268,7 +214,7 @@ export default function CourseCardsClient({
                   </div>
 
                   <span className="flex items-center gap-1 text-[11px] font-mono text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-                    <Clock size={12} /> {durationText}
+                    <Clock size={12} /> {isPro ? '14 ta modul' : '8 ta modul'}
                   </span>
                 </div>
 
@@ -277,9 +223,6 @@ export default function CourseCardsClient({
                   <div suppressHydrationWarning className="font-mono text-3xl sm:text-4xl font-black text-white">
                     {formatPrice(price)}
                   </div>
-                  <span className="text-xs font-mono font-bold text-white/40">
-                    {periodLabel}
-                  </span>
                 </div>
 
                 <p className="mb-6 flex items-center gap-2 text-[13px] font-semibold text-white/70">
@@ -337,7 +280,7 @@ export default function CourseCardsClient({
                 {/* Actions */}
                 <div className="space-y-2.5 pt-2">
                   <Link
-                    href={published ? `/checkout/${content.courseId}?period=${billingPeriod}` : '/courses'}
+                    href={published ? `/checkout/${content.courseId}` : '/courses'}
                     aria-disabled={!published}
                     className={`group flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-xs font-black uppercase tracking-wider transition ${
                       isPro

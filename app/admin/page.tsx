@@ -9,6 +9,9 @@ import {
   ArrowRight, 
   ShieldCheck, 
   Award,
+  Calendar,
+  Wallet,
+  ArrowUpRight,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -29,6 +32,35 @@ export default async function AdminDashboardPage() {
   const totalRevenue = stats.totalRevenue;
   const paidUsersCount = stats.paidUsersCount;
   const registeredOnlyCount = Math.max(0, totalUsers - paidUsersCount);
+
+  const now = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const oneWeekMs = 7 * oneDayMs;
+  const oneMonthMs = 30 * oneDayMs;
+  const oneYearMs = 365 * oneDayMs;
+
+  const dailyRevenue = approvedPayments
+    .filter((p) => now - new Date(p.created_at).getTime() <= oneDayMs)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const weeklyRevenue = approvedPayments
+    .filter((p) => now - new Date(p.created_at).getTime() <= oneWeekMs)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const monthlyRevenue = approvedPayments
+    .filter((p) => now - new Date(p.created_at).getTime() <= oneMonthMs)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const yearlyRevenue = approvedPayments
+    .filter((p) => now - new Date(p.created_at).getTime() <= oneYearMs)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const revenueMetrics = [
+    { name: 'Kunlik Daromad', period: '24 soatlik', value: `${new Intl.NumberFormat('uz-UZ').format(dailyRevenue)} UZS`, badge: 'Kunlik' },
+    { name: 'Haftalik Daromad', period: 'So‘nggi 7 kun', value: `${new Intl.NumberFormat('uz-UZ').format(weeklyRevenue)} UZS`, badge: 'Haftalik' },
+    { name: 'Oylik Daromad', period: 'So‘nggi 30 kun', value: `${new Intl.NumberFormat('uz-UZ').format(monthlyRevenue)} UZS`, badge: 'Oylik' },
+    { name: 'Yillik Daromad', period: 'So‘nggi 365 kun', value: `${new Intl.NumberFormat('uz-UZ').format(yearlyRevenue)} UZS`, badge: 'Yillik' },
+  ];
 
   const kpis = [
     { name: 'Jami foydalanuvchilar', value: totalUsers, sub: `${paidUsersCount} ta xaridor`, icon: Users },
@@ -108,6 +140,50 @@ export default async function AdminDashboardPage() {
             <div className="text-[11px] text-white/40 font-mono mt-1 font-medium">{k.sub}</div>
           </div>
         ))}
+      </div>
+
+      {/* 4-Period Revenue Breakdown: Kunlik, Haftalik, Oylik, Yillik */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-black text-white flex items-center gap-2">
+              <Wallet size={18} className="text-white" />
+              Moliya va Daromad Tahlili (Kunlik, Haftalik, Oylik, Yillik)
+            </h2>
+            <p className="text-xs text-white/50 mt-0.5">Tasdiqlangan to&apos;lovlar bo&apos;yicha aniq daromad ko&apos;rsatkichlari</p>
+          </div>
+          <Link
+            href="/admin/analytics"
+            className="text-xs font-bold text-white/70 hover:text-white flex items-center gap-1 transition"
+          >
+            Batafsil analitika <ArrowUpRight size={14} />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {revenueMetrics.map((r, idx) => (
+            <div
+              key={idx}
+              className="bg-[#000000] border border-white/15 rounded-3xl p-6 shadow-2xl hover:border-white/35 transition relative overflow-hidden group"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/10 text-white border border-white/20">
+                  {r.badge}
+                </span>
+                <Calendar size={16} className="text-white/40 group-hover:text-white transition" />
+              </div>
+              <div className="text-xs font-mono uppercase text-white/50 tracking-wider mb-1 font-bold">
+                {r.name}
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
+                {r.value}
+              </div>
+              <div className="text-[11px] text-white/40 font-mono mt-1.5 flex items-center gap-1">
+                <span>{r.period}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Secondary User Conversion Stats */}

@@ -52,6 +52,7 @@ export default function AdminLessonEditClient({
   const [xpReward, setXpReward] = useState(String(lesson.xp_reward || 100));
 
   // Video states
+  const [videoSourceType, setVideoSourceType] = useState<'url' | 'file'>('url');
   const [videoUrl, setVideoUrl] = useState(lesson.video_url || '');
   const [videoStoragePath, setVideoStoragePath] = useState(lesson.video_storage_path || '');
   const [durationSeconds, setDurationSeconds] = useState(lesson.duration || 600);
@@ -59,6 +60,12 @@ export default function AdminLessonEditClient({
   const [isPublished, setIsPublished] = useState(lesson.is_published ?? true);
   const [previewEnabled, setPreviewEnabled] = useState(lesson.preview_enabled ?? false);
   const [allowSeeking, setAllowSeeking] = useState(lesson.allow_seeking ?? false);
+
+  // Helper for YouTube ID extraction
+  const extractYouTubeId = (url: string): string | null => {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+    return match ? match[1] : null;
+  };
 
   // Video upload / replace states
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -100,13 +107,13 @@ export default function AdminLessonEditClient({
       return;
     }
 
-    if (file.size > 2048 * 1024 * 1024) {
-      toast.error('Video hajmi 2GB dan oshmasligi kerak.');
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    if (file.size > 6 * 1024 * 1024) {
+      toast.error(`Fayl hajmi ${sizeMb} MB. Serverless hosting cheklovi sababli 6 MB dan katta videolarni to‘g‘ridan-to‘g‘ri yuklab bo‘lmaydi. Iltimos videoni YouTube-ga 'Dostup po ssylke' (Unlisted) qilib yuklang va "Video Havolasi" tabidan foydalaning!`, { duration: 8000 });
       return;
     }
 
     setVideoFile(file);
-    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
     setFileMeta({ name: file.name, sizeMb: `${sizeMb} MB` });
 
     const objectUrl = URL.createObjectURL(file);
@@ -205,16 +212,19 @@ export default function AdminLessonEditClient({
       return;
     }
 
-    let finalVideoUrl = videoUrl;
-    if (videoFile && !videoUrl) {
-      // Upload must succeed before saving — never persist a blob: URL.
+    let finalVideoUrl = videoUrl.trim();
+    if (videoSourceType === 'file' && videoFile && !videoUrl) {
+      if (videoFile.size > 6 * 1024 * 1024) {
+        toast.error('Fayl hajmi 6MB dan katta. Serverless hosting cheklovi sababli YouTube havolasidan foydalaning!');
+        return;
+      }
       const uploaded = await startVideoUpload();
       if (!uploaded) return;
       finalVideoUrl = uploaded;
     }
 
     if (!finalVideoUrl) {
-      toast.error('Video yuklang yoki video havolasini kiriting');
+      toast.error('Video havolasini kiriting yoki video yuklang');
       return;
     }
 
@@ -404,102 +414,234 @@ export default function AdminLessonEditClient({
         <form onSubmit={handleUpdateLesson} className="space-y-8">
           {/* Section 1: Video Management & Real Device Upload */}
           <div className="bg-[#111] border border-white/5 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-black text-white flex items-center gap-2">
-                <Film size={20} className="text-emerald-400" />
-                1. Video Dars Fayli
-              </h2>
-              {videoUrl && (
-                <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1">
-                  <CheckCircle2 size={12} /> Video mavjud
-                </span>
-              )}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+              <div>
+                <h2 className="text-lg font-black text-white flex items-center gap-2">
+                  <Film size={20} className="text-emerald-400" />
+                  1. Dars Videosini Boshqarish
+                </h2>
+                <p className="text-xs text-white/50 mt-0.5">
+                  YouTube / Vimeo / MP4 video havolasi yoki fayl orqali yuklash
+                </p>
+              </div>
+
+              {/* Video Source Tabs */}
+              <div className="inline-flex rounded-2xl bg-black/60 border border-white/10 p-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setVideoSourceType('url')}
+                  className={`px-4 py-2 rounded-xl font-bold transition flex items-center gap-1.5 ${
+                    videoSourceType === 'url'
+                      ? 'bg-emerald-500 text-black font-black shadow-lg shadow-emerald-500/20'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  <span>Video Havolasi (URL)</span>
+                  <span className="text-[9px] uppercase tracking-wider bg-black/20 text-black px-1.5 py-0.5 rounded font-mono font-bold">
+                    Tavsiya
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVideoSourceType('file')}
+                  className={`px-4 py-2 rounded-xl font-bold transition ${
+                    videoSourceType === 'file'
+                      ? 'bg-emerald-500 text-black font-black shadow-lg shadow-emerald-500/20'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  Fayl yuklash (&lt; 6MB)
+                </button>
+              </div>
             </div>
 
-            {videoPreviewUrl ? (
-              <div className="space-y-4">
-                <div className="bg-black/60 border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <h4 className="font-bold text-white text-sm">
-                        {fileMeta?.name || lesson.title}
-                      </h4>
-                      <p className="text-xs font-mono text-white/40 mt-0.5">
-                        Davomiyligi: {Math.floor(durationSeconds / 60)} daq {durationSeconds % 60} soniya
-                        {fileMeta && ` • ${fileMeta.sizeMb}`}
-                      </p>
-                    </div>
+            {/* Tab 1: Video URL (YouTube, Vimeo, MP4) */}
+            {videoSourceType === 'url' ? (
+              <div className="space-y-5">
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 leading-relaxed space-y-1">
+                  <p className="font-bold flex items-center gap-1.5 text-emerald-400">
+                    <Sparkles size={14} /> Eng qulay va tavsiya etilgan usul:
+                  </p>
+                  <p>
+                    Videoni YouTube-ga <strong>&quot;Dostup po ssylke&quot; (Unlisted / Yashirin havola)</strong> qilib yuklang va quyidagi maydonga havolani joylashtiring. Bu usulda hech qanday hajm cheklovi yo&apos;q, video talabalar uchun tezyurar HD formatda yuklanadi va bufering bo&apos;lmaydi!
+                  </p>
+                </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-xl transition flex items-center gap-1.5"
-                      >
-                        <UploadCloud size={14} /> Videoni almashtirish
-                      </button>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-white/70 mb-2 font-bold">
+                    Video Havolasi (YouTube URL yoki to&apos;g&apos;ridan-to&apos;g&apos;ri MP4 link) *
+                  </label>
+                  <input
+                    type="url"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=... yoki https://youtu.be/... yoki https://...mp4"
+                    className="w-full bg-black/60 border border-white/15 rounded-xl px-4 py-3.5 text-white text-sm font-mono focus:outline-none focus:border-emerald-500 transition placeholder:text-white/20"
+                  />
+                </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setShowDeleteVideoModal(true)}
-                        className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl border border-rose-500/20 transition flex items-center gap-1"
-                      >
-                        <Trash2 size={14} /> O&apos;chirish
-                      </button>
-                    </div>
+                {/* Video Duration setting */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-white/60 mb-1.5 font-bold">
+                      Dars davomiyligi (daqiqada)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={Math.round(durationSeconds / 60)}
+                      onChange={(e) => {
+                        const mins = parseInt(e.target.value, 10) || 1;
+                        setDurationSeconds(mins * 60);
+                      }}
+                      placeholder="Masalan: 15"
+                      className="w-full bg-black/60 border border-white/15 rounded-xl px-4 py-3 text-white text-sm font-mono focus:outline-none focus:border-emerald-500 transition"
+                    />
+                    <span className="text-[11px] text-white/40 font-mono mt-1 block">
+                      Jami: {durationSeconds} soniya
+                    </span>
                   </div>
 
-                  {/* Upload Progress */}
-                  {isUploading && (
-                    <div className="space-y-2 pt-2 border-t border-white/5">
-                      <div className="flex justify-between text-xs font-mono">
-                        <span className="text-white/60 flex items-center gap-1.5">
-                          <RefreshCw size={12} className="animate-spin text-emerald-400" />
-                          Yangi video yuklanmoqda...
-                        </span>
-                        <span className="text-emerald-400 font-bold">{uploadProgress}%</span>
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-white/60 mb-1.5 font-bold">
+                      Ko&apos;rish talabi (foizda %)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={watchRequirement}
+                      onChange={(e) => setWatchRequirement(parseInt(e.target.value, 10) || 90)}
+                      className="w-full bg-black/60 border border-white/15 rounded-xl px-4 py-3 text-white text-sm font-mono focus:outline-none focus:border-emerald-500 transition"
+                    />
+                    <span className="text-[11px] text-white/40 font-mono mt-1 block">
+                      Talaba testga o&apos;tishi uchun videoni ko&apos;rish minimumi: 90%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Live Preview for YouTube or direct URL */}
+                {videoUrl && (
+                  <div className="space-y-2 pt-2">
+                    <span className="text-xs font-mono text-white/60 block font-bold uppercase">
+                      Video ko&apos;rinishi (Jonli Preview):
+                    </span>
+                    <div className="aspect-video w-full max-w-2xl bg-black rounded-2xl overflow-hidden border border-white/15 relative shadow-2xl">
+                      {extractYouTubeId(videoUrl) ? (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${extractYouTubeId(videoUrl)}`}
+                          title="YouTube Preview"
+                          className="w-full h-full border-0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video
+                          src={videoUrl}
+                          controls
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Tab 2: File Upload (limited to < 6MB) */
+              <div className="space-y-4">
+                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 leading-relaxed flex items-start gap-2">
+                  <AlertCircle size={16} className="shrink-0 mt-0.5 text-amber-400" />
+                  <p>
+                    <strong>Netlify cheklovi:</strong> Serverless hosting serverga to&apos;g&apos;ridan-to&apos;g&apos;ri faqat <strong>6 MB gacha</strong> bo&apos;lgan fayllarni yuklashga ruxsat beradi. Katta dars videolari uchun <strong>&quot;Video Havolasi (URL)&quot;</strong> bo&apos;limidan foydalanib, YouTube (Unlisted) havolasini kiritish tavsiya etiladi.
+                  </p>
+                </div>
+
+                {videoPreviewUrl ? (
+                  <div className="space-y-4">
+                    <div className="bg-black/60 border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <h4 className="font-bold text-white text-sm">
+                            {fileMeta?.name || lesson.title}
+                          </h4>
+                          <p className="text-xs font-mono text-white/40 mt-0.5">
+                            Davomiyligi: {Math.floor(durationSeconds / 60)} daq {durationSeconds % 60} soniya
+                            {fileMeta && ` • ${fileMeta.sizeMb}`}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-xl transition flex items-center gap-1.5"
+                          >
+                            <UploadCloud size={14} /> Videoni almashtirish
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowDeleteVideoModal(true)}
+                            className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl border border-rose-500/20 transition flex items-center gap-1"
+                          >
+                            <Trash2 size={14} /> O&apos;chirish
+                          </button>
+                        </div>
                       </div>
-                      <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-emerald-400 rounded-full transition-all duration-300"
-                          style={{ width: `${uploadProgress}%` }}
+
+                      {/* Upload Progress */}
+                      {isUploading && (
+                        <div className="space-y-2 pt-2 border-t border-white/5">
+                          <div className="flex justify-between text-xs font-mono">
+                            <span className="text-white/60 flex items-center gap-1.5">
+                              <RefreshCw size={12} className="animate-spin text-emerald-400" />
+                              Yangi video yuklanmoqda...
+                            </span>
+                            <span className="text-emerald-400 font-bold">{uploadProgress}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-emerald-400 rounded-full transition-all duration-300"
+                              style={{ width: `${uploadProgress}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Video Player Preview */}
+                      <div className="aspect-video w-full bg-black rounded-xl overflow-hidden border border-white/10 relative">
+                        <video
+                          src={videoPreviewUrl}
+                          controls
+                          className="w-full h-full object-contain"
                         />
                       </div>
                     </div>
-                  )}
-
-                  {/* Video Player Preview */}
-                  <div className="aspect-video w-full bg-black rounded-xl overflow-hidden border border-white/10 relative">
-                    <video
-                      src={videoPreviewUrl}
-                      controls
-                      className="w-full h-full object-contain"
-                    />
                   </div>
-                </div>
-              </div>
-            ) : (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-white/10 hover:border-emerald-500/50 rounded-3xl p-8 sm:p-12 text-center transition cursor-pointer bg-black/30 hover:bg-black/50 flex flex-col items-center justify-center gap-3"
-              >
-                <UploadCloud size={36} className="text-white/30" />
-                <p className="text-sm font-bold text-white">Yangi video fayl yuklang</p>
-                <p className="text-xs text-white/40">MP4, WebM, MOV • Maksimal 2GB</p>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-white/10 hover:border-emerald-500/50 rounded-3xl p-8 sm:p-12 text-center transition cursor-pointer bg-black/30 hover:bg-black/50 flex flex-col items-center justify-center gap-3"
+                  >
+                    <UploadCloud size={36} className="text-white/30" />
+                    <p className="text-sm font-bold text-white">Yangi video fayl yuklang</p>
+                    <p className="text-xs text-white/40">MP4, WebM, MOV • Maksimal 6MB</p>
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime,video/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleVideoSelect(e.target.files[0]);
+                    }
+                  }}
+                  className="hidden"
+                />
               </div>
             )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="video/mp4,video/webm,video/quicktime,video/*"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleVideoSelect(e.target.files[0]);
-                }
-              }}
-              className="hidden"
-            />
           </div>
 
           {/* Section 2: Lesson Information */}
