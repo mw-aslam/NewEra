@@ -72,7 +72,12 @@ export default function Footer({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 mb-12">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-1.5 mb-4">
+            <div className="flex items-center gap-2.5 mb-4">
+              <img
+                src="/logo.png"
+                alt="NEW ERA"
+                className="h-7 w-7 object-contain rounded-lg shadow"
+              />
               <span className="text-[19px] font-black tracking-[0.16em] text-white uppercase font-mono">
                 NEW<span className="text-white/40">.</span>ERA
               </span>

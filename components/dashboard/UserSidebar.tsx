@@ -75,7 +75,12 @@ export default function UserSidebar({
             <ChevronLeft size={18} className="transition group-hover:-translate-x-0.5" />
           </Link>
 
-          <Link href="/" className="flex items-center gap-1.5 group">
+          <Link href="/" className="flex items-center gap-2 group">
+            <img
+              src="/logo.png"
+              alt="NEW ERA"
+              className="h-6 w-6 object-contain rounded-md shadow"
+            />
             <div className="text-base sm:text-lg font-black text-white tracking-widest font-mono">
               NEW<span className="text-white/40">.</span>ERA
             </div>

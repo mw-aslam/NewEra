@@ -199,6 +199,7 @@ export interface LocalNotification {
   type: string;
   link?: string | null;
   read: boolean;
+  read_by?: string[];
   created_at: string;
 }
 
@@ -1454,6 +1455,13 @@ export const localDb = {
   getNotifications(userId: string): LocalNotification[] {
     return loadDatabase()
       .notifications.filter((n) => n.user_id === userId || n.user_id === 'all')
+      .map((n) => {
+        if (n.user_id === 'all') {
+          const isRead = Array.isArray(n.read_by) ? n.read_by.includes(userId) : n.read;
+          return { ...n, read: isRead };
+        }
+        return n;
+      })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   },
 
@@ -1467,6 +1475,7 @@ export const localDb = {
         type: n.type,
         link: n.link ?? null,
         read: n.read ?? false,
+        read_by: [],
         created_at: new Date().toISOString(),
       };
       db.notifications.unshift(created);
@@ -1480,9 +1489,19 @@ export const localDb = {
       for (const n of db.notifications) {
         if (n.user_id !== userId && n.user_id !== 'all') continue;
         if (notificationId && n.id !== notificationId) continue;
-        if (!n.read) {
-          n.read = true;
-          count++;
+        if (n.user_id === 'all') {
+          if (!Array.isArray(n.read_by)) {
+            n.read_by = [];
+          }
+          if (!n.read_by.includes(userId)) {
+            n.read_by.push(userId);
+            count++;
+          }
+        } else {
+          if (!n.read) {
+            n.read = true;
+            count++;
+          }
         }
       }
       return count;

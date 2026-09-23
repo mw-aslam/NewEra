@@ -19,11 +19,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
 
     if (objectPath.includes('..')) throw new ApiError('Noto‘g‘ri yo‘l', 400);
 
+    const isOwner = objectPath.startsWith(auth.profile.id + '/') || objectPath.startsWith(auth.profile.id);
     const url = `/api/receipt/${objectPath}`;
     const payment = (await db.getPayments()).find((p) => p.receipt_url === url);
 
-    if (!payment) throw new ApiError('Chek topilmadi', 404);
-    if (!auth.isAdmin && payment.user_id !== auth.profile.id) {
+    if (!auth.isAdmin && !isOwner && (!payment || payment.user_id !== auth.profile.id)) {
       throw new ApiError('Ruxsat berilmagan', 403);
     }
 

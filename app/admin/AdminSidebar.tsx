@@ -55,7 +55,12 @@ export default function AdminSidebar({ currentFullName, currentEmail }: AdminSid
     <aside className="w-full md:w-72 bg-[#000000] border-r border-white/10 flex flex-col shrink-0 shadow-2xl">
       {/* Brand Header */}
       <div className="p-5 border-b border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent flex items-center justify-between">
-        <Link href="/admin" className="flex items-center gap-2 group">
+        <Link href="/admin" className="flex items-center gap-2.5 group">
+          <img
+            src="/logo.png"
+            alt="NEW ERA"
+            className="h-6 w-6 object-contain rounded-md shadow"
+          />
           <div className="text-lg font-black text-white tracking-widest font-mono">
             NEW<span className="text-white/40">.</span>ERA
           </div>

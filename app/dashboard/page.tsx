@@ -296,6 +296,67 @@ export default async function DashboardPage() {
           </section>
         )}
 
+        {/* Announcements & Notifications Feed */}
+        {notifications.length > 0 && (
+          <section className="mb-7 rounded-3xl border border-white/10 bg-[#090909] p-5 sm:p-6 shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
+                  <Bell size={16} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-white font-mono uppercase tracking-wider">
+                    Xabarnomalar & E&apos;lonlar
+                  </h2>
+                  <p className="text-[11px] text-white/40 font-mono">Platforma ma&apos;muriyatidan so&apos;nggi yangiliklar</p>
+                </div>
+              </div>
+              <Link
+                href="/notifications"
+                className="text-xs font-mono font-bold text-pink-400 hover:text-pink-300 transition flex items-center gap-1"
+              >
+                <span>Barchasi ({notifications.length})</span>
+                <ArrowRight size={13} />
+              </Link>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {notifications.slice(0, 2).map((n) => (
+                <Link
+                  key={n.id}
+                  href={n.link || '/notifications'}
+                  className={`p-4 rounded-2xl border transition group flex flex-col justify-between ${
+                    !n.read
+                      ? 'bg-pink-950/15 border-pink-500/30 hover:border-pink-500/50'
+                      : 'bg-white/[0.02] border-white/10 hover:border-white/20'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-2 font-bold text-xs text-white group-hover:text-pink-300 transition">
+                        {!n.read && <span className="w-2 h-2 rounded-full bg-pink-400 shrink-0" />}
+                        <span className="truncate">{n.title}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-white/40 shrink-0">
+                        {new Date(n.created_at).toLocaleDateString('uz-UZ', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-white/60 line-clamp-2 leading-relaxed font-sans">
+                      {n.message}
+                    </p>
+                  </div>
+                  {n.link && (
+                    <div className="mt-3 pt-2 border-t border-white/5 flex items-center gap-1 text-[11px] font-mono font-bold text-white/50 group-hover:text-white transition">
+                      <span>Batafsil ko&apos;rish</span>
+                      <ArrowRight size={11} />
+                    </div>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* KPIs */}
         <section className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {kpis.map((kpi) => (

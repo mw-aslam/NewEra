@@ -40,12 +40,14 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   const lessonModule = localizeModule(baseModule, translatable ? moduleT ?? undefined : undefined);
   const course = localizeCourse(baseCourse, translatable ? courseT ?? undefined : undefined);
 
-  if (!await canAccessCourse(auth.profile, course.id)) {
+  const isPreview = Boolean(baseLesson.preview_enabled);
+
+  if (!auth.isAdmin && !isPreview && !(await canAccessCourse(auth.profile, course.id))) {
     redirect(`/checkout/${course.id}`);
   }
 
   const unlock = await isLessonUnlocked(auth.profile.id, lesson.id);
-  if (!unlock.unlocked && !auth.isAdmin) {
+  if (!unlock.unlocked && !auth.isAdmin && !isPreview) {
     redirect(`/course/${course.id}?locked=${encodeURIComponent(unlock.reason || '')}`);
   }
 

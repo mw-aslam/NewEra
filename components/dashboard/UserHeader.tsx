@@ -36,6 +36,16 @@ interface HeaderUser {
  * name was shown to everyone. Until the fetch resolves nothing personal is
  * rendered — an invented placeholder is worse than an empty slot.
  */
+interface HeaderNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  link?: string | null;
+  read: boolean;
+  created_at: string;
+}
+
 export default function UserHeader({ onSearch }: UserHeaderProps) {
   const { t } = useI18n();
   const [user, setUser] = useState<HeaderUser | null>(null);
@@ -43,6 +53,8 @@ export default function UserHeader({ onSearch }: UserHeaderProps) {
   const [isDark, setIsDark] = useState(true);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<HeaderNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,9 +64,17 @@ export default function UserHeader({ onSearch }: UserHeaderProps) {
       .then((data) => {
         if (!cancelled && data?.authenticated) setUser(data.user);
       })
-      .catch(() => {
-        // Header still renders; it just shows no identity.
-      });
+      .catch(() => {});
+
+    fetch('/api/notifications')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.notifications) {
+          setNotifications(data.notifications.slice(0, 5));
+          setUnreadCount(data.unread ?? data.notifications.filter((n: HeaderNotification) => !n.read).length);
+        }
+      })
+      .catch(() => {});
 
     return () => {
       cancelled = true;
@@ -115,21 +135,63 @@ export default function UserHeader({ onSearch }: UserHeaderProps) {
             title="Xabarnomalar"
           >
             <Bell size={16} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white ring-2 ring-black" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-pink-500 text-white font-mono text-[9px] font-black flex items-center justify-center ring-2 ring-black">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-[#0a0a0a] border border-white/20 rounded-2xl p-4 shadow-2xl z-50 space-y-3">
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[#0a0a0a] border border-white/20 rounded-2xl p-4 shadow-2xl z-50 space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                <h4 className="text-xs font-bold text-white font-mono uppercase">Xabarnomalar</h4>
-                <span className="text-[10px] font-mono text-white/50">1 ta yangi</span>
+                <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider">Xabarnomalar</h4>
+                <span className="text-[10px] font-mono text-white/50">
+                  {unreadCount > 0 ? `${unreadCount} ta o‘qilmagan` : 'Barchasi o‘qilgan'}
+                </span>
               </div>
-              <div className="space-y-2 text-xs">
-                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/80">
-                  <div className="font-bold text-[11px] text-white">Dars eslatmasi</div>
-                  <p className="text-[10px] text-white/50 mt-0.5 font-mono">Bugungi MT5 darsingiz va 1 ta testingiz kutmoqda.</p>
-                </div>
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {notifications.length === 0 ? (
+                  <p className="text-white/40 text-[11px] text-center py-5 font-mono">
+                    Hozircha xabarnomalar yo‘q
+                  </p>
+                ) : (
+                  notifications.map((n) => (
+                    <Link
+                      key={n.id}
+                      href={n.link || '/notifications'}
+                      onClick={() => setShowNotifications(false)}
+                      className={`block p-2.5 rounded-xl border transition ${
+                        !n.read
+                          ? 'bg-pink-500/[0.08] border-pink-500/25 hover:border-pink-500/40 text-white'
+                          : 'bg-white/[0.03] border-white/10 hover:border-white/20 text-white/80'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-bold text-[11px] text-white flex items-center gap-1.5 truncate">
+                          {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-pink-400 shrink-0" />}
+                          <span className="truncate">{n.title}</span>
+                        </div>
+                        <span className="text-[9px] font-mono text-white/40 shrink-0">
+                          {new Date(n.created_at).toLocaleDateString('uz-UZ', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-white/60 mt-1 line-clamp-2 leading-relaxed">
+                        {n.message}
+                      </p>
+                    </Link>
+                  ))
+                )}
+              </div>
+              <div className="pt-2 border-t border-white/10 text-center">
+                <Link
+                  href="/notifications"
+                  onClick={() => setShowNotifications(false)}
+                  className="text-[11px] font-mono font-bold text-pink-400 hover:text-pink-300 transition"
+                >
+                  Barcha xabarnomalarni ko‘rish →
+                </Link>
               </div>
             </div>
           )}

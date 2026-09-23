@@ -162,7 +162,8 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                         const prevLesson = globalIndex > 0 ? allLessons[globalIndex - 1] : null;
                         const prevTestPassed = prevLesson ? passedTestLessonIds.has(prevLesson.id) : true;
                         
-                        const isUnlocked = hasAccess && (isFirst || prevTestPassed);
+                        const isPreview = Boolean(lesson.preview_enabled);
+                        const isUnlocked = (hasAccess && (isFirst || prevTestPassed)) || isPreview;
                         const testPassed = passedTestLessonIds.has(lesson.id);
 
                         return (
@@ -176,12 +177,17 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                                 <Lock size={18} className="text-white/25 shrink-0" />
                               )}
 
-                              <div>
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className={`font-medium ${isUnlocked ? 'text-white' : 'text-white/40'}`}>
                                   {lesson.title}
                                 </span>
+                                {isPreview && !hasAccess && (
+                                  <span className="text-[10px] font-mono font-bold text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded border border-pink-500/20">
+                                    Bepul Preview
+                                  </span>
+                                )}
                                 {lesson.xp_reward && (
-                                  <span className="ml-2 text-[10px] font-mono text-white/80 bg-white/10 px-2 py-0.5 rounded border border-white/10">
+                                  <span className="text-[10px] font-mono text-white/80 bg-white/10 px-2 py-0.5 rounded border border-white/10">
                                     +{lesson.xp_reward} XP
                                   </span>
                                 )}
@@ -194,7 +200,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                                   href={`/lesson/${lesson.id}`}
                                   className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white text-white hover:text-black font-mono text-xs font-bold transition"
                                 >
-                                  {t('courses.watch')}
+                                  {isPreview && !hasAccess ? 'Bepul ko‘rish' : t('courses.watch')}
                                 </Link>
                               ) : (
                                 <span className="text-xs font-mono text-white/30 flex items-center gap-1">

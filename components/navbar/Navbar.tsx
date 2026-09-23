@@ -97,7 +97,12 @@ export default function Navbar() {
       >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center group" onClick={() => setMobileOpen(false)}>
+          <Link href="/" className="flex items-center gap-2.5 group" onClick={() => setMobileOpen(false)}>
+            <img
+              src="/logo.png"
+              alt="NEW ERA"
+              className="h-8 w-8 object-contain rounded-lg shadow-md group-hover:scale-105 transition-transform duration-200"
+            />
             <span className="text-[19px] font-black tracking-[0.16em] text-white uppercase font-mono group-hover:text-neutral-200 transition">
               NEW<span className="text-white/40">.</span>ERA
             </span>
