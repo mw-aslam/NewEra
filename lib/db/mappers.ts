@@ -148,6 +148,12 @@ export function settingsFromRow(row: Row | null, defaults: AdminSettings): Admin
     payment_instructions: str(row.payment_instructions, defaults.payment_instructions),
     card_number: str(row.card_number, defaults.card_number),
     card_holder: str(row.card_holder, defaults.card_holder),
+    cards: Array.isArray(row.cards) ? (row.cards as AdminSettings['cards']) : defaults.cards,
+    pricing: row.pricing ? (row.pricing as AdminSettings['pricing']) : defaults.pricing,
+    course_limit_days: num(row.course_limit_days, defaults.course_limit_days ?? 30),
+    instagram_url: str(row.instagram_url, defaults.instagram_url ?? ''),
+    telegram_channel_url: str(row.telegram_channel_url, defaults.telegram_channel_url ?? ''),
+    youtube_url: str(row.youtube_url, defaults.youtube_url ?? ''),
     level_thresholds: Array.isArray(row.level_thresholds)
       ? (row.level_thresholds as AdminSettings['level_thresholds'])
       : defaults.level_thresholds,

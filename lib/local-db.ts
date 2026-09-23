@@ -390,6 +390,9 @@ export interface AdminSettings {
     pro: PricingPlanPeriod;
   };
   course_limit_days?: number;
+  instagram_url?: string;
+  telegram_channel_url?: string;
+  youtube_url?: string;
   level_thresholds: { name: string; xp: number }[];
 }
 
@@ -486,11 +489,14 @@ export const DEFAULT_SETTINGS: AdminSettings = {
     },
     pro: {
       daily: 39000,
-      monthly: 599000,
+      monthly: 499000,
       yearly: 4999000,
     },
   },
   course_limit_days: 30,
+  instagram_url: 'https://instagram.com/newera_trading',
+  telegram_channel_url: 'https://t.me/newera_trading',
+  youtube_url: 'https://youtube.com/@newera_trading',
   level_thresholds: [
     { name: 'Beginner', xp: 0 },
     { name: 'Intermediate', xp: 1000 },

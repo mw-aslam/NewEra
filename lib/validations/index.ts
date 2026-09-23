@@ -266,6 +266,10 @@ export const adminSettingsSchema = z.object({
   payment_instructions: z.string().optional(),
   card_number: z.string().optional(),
   card_holder: z.string().optional(),
+  instagram_url: z.string().optional(),
+  telegram_channel_url: z.string().optional(),
+  youtube_url: z.string().optional(),
+  course_limit_days: z.coerce.number().min(1).optional(),
   cards: z
     .array(
       z.object({

@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({
       pricing: settings.pricing || {
         standard: { daily: 19000, monthly: 299000, yearly: 2499000 },
-        pro: { daily: 39000, monthly: 599000, yearly: 4999000 },
+        pro: { daily: 39000, monthly: 499000, yearly: 4999000 },
       },
       course_limit_days: settings.course_limit_days || 30,
       cards: settings.cards || [],

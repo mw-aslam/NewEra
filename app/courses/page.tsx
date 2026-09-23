@@ -74,8 +74,8 @@ export default async function CoursesPage() {
             </p>
           </div>
 
-          {/* Courses Grid - Standart & Pro only */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {/* Courses Grid - Standart & Pro only (Equal Height) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
             {processedCourses?.map((course) => {
               const isPro = course.slug === 'pro' || course.title.toLowerCase().includes('pro');
               const detailHref = course.slug === 'standard' ? '/courses/standard' : '/courses/pro';
@@ -90,7 +90,7 @@ export default async function CoursesPage() {
               return (
                 <div 
                   key={course.id}
-                  className={`bg-[#0a0a0d] rounded-3xl overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-2xl relative ${
+                  className={`bg-[#0a0a0d] rounded-3xl overflow-hidden transition-all duration-300 flex flex-col justify-between h-full shadow-2xl relative ${
                     isPro 
                       ? 'border-2 border-pink-500/40 shadow-[0_0_50px_-15px_rgba(236,72,153,0.3)] bg-gradient-to-b from-pink-950/20 to-[#0a0a0d]' 
                       : 'border border-white/15 hover:border-white/30'

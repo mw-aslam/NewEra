@@ -168,15 +168,15 @@ export const PRO_COURSE: CourseContent = {
   courseId: COURSE_IDS.pro,
   medal: '🥈',
   name: 'PRO',
-  price: 599000,
-  priceLabel: '599 000 so‘m',
+  price: 499000,
+  priceLabel: '499 000 so‘m',
   badge: '🔥 ENG MASHHUR',
   tagline: 'Professional tahlil, ilg‘or strategiyalar va psixologiya bo‘limi',
   taglineEmoji: '🚀',
   accent: 'pink',
   pricing: {
     daily: 39000,
-    monthly: 599000,
+    monthly: 499000,
     yearly: 4999000,
   },
   modules: [
@@ -359,7 +359,7 @@ export const TARIFFS = {
   title: '💰 TARIFLAR',
   rows: [
     { medal: '🥉', name: 'STANDARD', price: '299 000 so‘m', note: '🎓 0 dan boshlash', slug: 'standard' },
-    { medal: '🥈', name: 'PRO', price: '599 000 so‘m', note: '🔥 Professional daraja', slug: 'pro' },
+    { medal: '🥈', name: 'PRO', price: '499 000 so‘m', note: '🔥 Professional daraja', slug: 'pro' },
   ],
   bestOrder: 'Eng yaxshi ketma-ketlik: STANDARD → PRO',
   bestOrderSub: 'Asoslar → Professional Strategiyalar → Psixologiya & Risk Menejment',

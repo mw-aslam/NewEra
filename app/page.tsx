@@ -34,7 +34,11 @@ export default async function Home() {
       <Testimonials />
       <FAQ />
       <FinalCTA />
-      <Footer />
+      <Footer
+        telegramUrl={settings.telegram_channel_url || settings.support_telegram}
+        instagramUrl={settings.instagram_url}
+        youtubeUrl={settings.youtube_url}
+      />
     </main>
   );
 }

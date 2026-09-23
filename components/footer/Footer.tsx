@@ -5,14 +5,43 @@ import Link from 'next/link';
 import { Send, Instagram, Youtube, Twitter } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
-export default function Footer() {
-  const { t, locale } = useI18n();
+interface FooterProps {
+  telegramUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
+}
+
+export default function Footer({
+  telegramUrl: propTg,
+  instagramUrl: propInsta,
+  youtubeUrl: propYt,
+}: FooterProps = {}) {
+  const { t } = useI18n();
+
+  const [tg, setTg] = React.useState(propTg || 'https://t.me/newera_trading');
+  const [insta, setInsta] = React.useState(propInsta || 'https://instagram.com/newera_trading');
+  const [yt, setYt] = React.useState(propYt || 'https://youtube.com/@newera_trading');
+
+  React.useEffect(() => {
+    if (propTg) setTg(propTg);
+    if (propInsta) setInsta(propInsta);
+    if (propYt) setYt(propYt);
+    if (!propTg || !propInsta || !propYt) {
+      fetch('/api/settings')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.telegram_channel_url || data.support_telegram) setTg(data.telegram_channel_url || data.support_telegram);
+          if (data.instagram_url) setInsta(data.instagram_url);
+          if (data.youtube_url) setYt(data.youtube_url);
+        })
+        .catch(() => {});
+    }
+  }, [propTg, propInsta, propYt]);
 
   const socialLinks = [
-    { icon: <Send size={16} />, href: 'https://t.me/newera_trading', label: 'Telegram' },
-    { icon: <Instagram size={16} />, href: '#', label: 'Instagram' },
-    { icon: <Youtube size={16} />, href: '#', label: 'YouTube' },
-    { icon: <Twitter size={16} />, href: '#', label: 'Twitter' },
+    { icon: <Send size={16} />, href: tg, label: 'Telegram' },
+    { icon: <Instagram size={16} />, href: insta, label: 'Instagram' },
+    { icon: <Youtube size={16} />, href: yt, label: 'YouTube' },
   ];
 
   const platformLinks = [

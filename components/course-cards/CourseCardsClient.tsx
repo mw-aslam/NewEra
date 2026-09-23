@@ -178,8 +178,8 @@ export default function CourseCardsClient({
           <p className="mt-1 text-[13px] text-white/35">{bestOrderSub}</p>
         </header>
 
-        {/* 2-Card Grid: Standart & Pro only */}
-        <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto items-start">
+        {/* 2-Card Grid: Standart & Pro only (Equal Height) */}
+        <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto items-stretch">
           {courses.map(({ content, note, published }) => {
             const isPro = content.slug === 'pro';
             const price = content.price;
@@ -189,7 +189,7 @@ export default function CourseCardsClient({
             return (
               <article
                 key={content.slug}
-                className={`relative flex flex-col rounded-3xl border p-6 sm:p-8 transition-all duration-300 hover:shadow-2xl ${
+                className={`relative flex flex-col justify-between h-full rounded-3xl border p-6 sm:p-8 transition-all duration-300 hover:shadow-2xl ${
                   isPro
                     ? 'border-pink-500/40 bg-[#0d0a10] hover:border-pink-500/70 shadow-pink-500/10'
                     : 'border-white/15 bg-[#0a0a0d] hover:border-white/30'
@@ -278,7 +278,7 @@ export default function CourseCardsClient({
                 </div>
 
                 {/* Actions */}
-                <div className="space-y-2.5 pt-2">
+                <div className="space-y-2.5 pt-4 mt-auto">
                   <Link
                     href={published ? `/checkout/${content.courseId}` : '/courses'}
                     aria-disabled={!published}

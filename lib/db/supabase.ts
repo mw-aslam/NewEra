@@ -488,16 +488,30 @@ export const supabaseAdapter: Database = {
             'enrollments',
             (q) => q.eq('user_id', enrollment.user_id!).eq('course_id', enrollment.course_id!),
             'saveEnrollment:lookup'
-          )
+          ).catch(() => null)
         : null;
+
+    const expiresAt =
+      enrollment.expires_at ||
+      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     if (existing) {
       const { id: _ignored, ...patch } = enrollment;
-      return updateOne<LocalEnrollment>('enrollments', existing.id, patch, 'saveEnrollment:update');
+      return updateOne<LocalEnrollment>(
+        'enrollments',
+        existing.id,
+        { expires_at: expiresAt, ...patch, status: patch.status || 'active' },
+        'saveEnrollment:update'
+      );
     }
     return insertOne<LocalEnrollment>(
       'enrollments',
-      { ...enrollment, status: enrollment.status || 'active', source: enrollment.source || 'manual' },
+      {
+        ...enrollment,
+        expires_at: expiresAt,
+        status: enrollment.status || 'active',
+        source: enrollment.source || 'manual',
+      },
       'saveEnrollment:insert'
     );
   },
@@ -508,8 +522,18 @@ export const supabaseAdapter: Database = {
       'enrollments',
       (q) => q.eq('user_id', userId).eq('course_id', courseId).eq('status', 'active'),
       'hasEnrollment'
-    );
-    return Boolean(row);
+    ).catch(() => null);
+    if (!row) return false;
+    const now = Date.now();
+    const expiresAtMs = row.expires_at
+      ? new Date(row.expires_at).getTime()
+      : row.purchased_at
+        ? new Date(row.purchased_at).getTime() + 30 * 24 * 60 * 60 * 1000
+        : 0;
+    if (expiresAtMs > 0 && expiresAtMs <= now) {
+      return false;
+    }
+    return true;
   },
 
   async revokeEnrollment(userId, courseId) {

@@ -130,6 +130,12 @@ export async function POST(request: NextRequest) {
 
     const status = courseId ? await getCourseStatus(auth.profile.id, courseId) : null;
     const profile = await db.getProfile(auth.profile.id);
+    const settings = await db.getSettings();
+    const telegramChannelUrl =
+      (lesson as { telegram_channel_url?: string }).telegram_channel_url ||
+      settings.telegram_channel_url ||
+      settings.support_telegram ||
+      'https://t.me/newera_trading';
 
     return NextResponse.json({
       score,
@@ -149,6 +155,7 @@ export async function POST(request: NextRequest) {
       certificateId: certificate?.certificate_id ?? null,
       attemptsUsed: attempts.length + 1,
       maxAttempts: test.max_attempts,
+      telegramChannelUrl,
     });
   } catch (error) {
     return apiError(error);

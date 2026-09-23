@@ -27,7 +27,7 @@ export default function Hero() {
       secondary: 'Boshlash',
       badges: ['Video darslar', 'Amaliy strategiyalar', 'Test va XP tizimi', "24/7 qo‘llab-quvvatlash"],
       disclaimer:
-        'NEW ERA — ta’lim platformasi. Trading yuqori riskli faoliyat, kurs foyda kafolatlamaydi.',
+        '⚠️ Ushbu video darsliklarni noqonuniy tarqatgan shaxs qonunchilikka muvofiq javobgarlikka tortiladi. Barcha mualliflik huquqlari himoyalangan.',
     },
     ru: {
       eyebrow: 'Образовательная платформа',
@@ -39,7 +39,7 @@ export default function Hero() {
       secondary: 'Начать',
       badges: ['Видеоуроки', 'Практические стратегии', 'Тесты и XP', 'Поддержка 24/7'],
       disclaimer:
-        'NEW ERA — образовательная платформа. Трейдинг сопряжён с высоким риском, курс не гарантирует прибыль.',
+        '⚠️ Лица, незаконно распространяющие данные видеоуроки, привлекаются к ответственности в соответствии с законодательством. Все авторские права защищены.',
     },
     en: {
       eyebrow: 'Education platform',
@@ -51,7 +51,7 @@ export default function Hero() {
       secondary: 'Get started',
       badges: ['Video lessons', 'Practical strategies', 'Tests & XP system', '24/7 support'],
       disclaimer:
-        'NEW ERA is an education platform. Trading carries high risk; the course guarantees no profit.',
+        '⚠️ Any unauthorized distribution of these video tutorials will be prosecuted to the full extent of the law. All rights reserved.',
     },
   }[locale];
 

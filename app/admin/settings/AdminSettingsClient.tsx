@@ -27,6 +27,9 @@ export default function AdminSettingsClient({ initialSettings }: AdminSettingsCl
   const [watchRequirement, setWatchRequirement] = useState(String(initialSettings?.watch_requirement ?? 90));
   const [supportEmail, setSupportEmail] = useState(initialSettings?.support_email || 'support@newera.uz');
   const [supportTelegram, setSupportTelegram] = useState(initialSettings?.support_telegram || 'https://t.me/newerasupport_bot');
+  const [telegramChannel, setTelegramChannel] = useState(initialSettings?.telegram_channel_url || 'https://t.me/newera_trading');
+  const [instagramUrl, setInstagramUrl] = useState(initialSettings?.instagram_url || 'https://instagram.com/newera_trading');
+  const [youtubeUrl, setYoutubeUrl] = useState(initialSettings?.youtube_url || 'https://youtube.com/@newera_trading');
   const [paymentWindow, setPaymentWindow] = useState(String(initialSettings?.payment_window_minutes ?? 15));
   const [paymentInstructions, setPaymentInstructions] = useState(
     initialSettings?.payment_instructions ||
@@ -81,6 +84,9 @@ export default function AdminSettingsClient({ initialSettings }: AdminSettingsCl
         watch_requirement: Math.max(1, Math.min(100, parseInt(watchRequirement, 10) || 90)),
         support_email: supportEmail.trim(),
         support_telegram: supportTelegram.trim(),
+        telegram_channel_url: telegramChannel.trim(),
+        instagram_url: instagramUrl.trim(),
+        youtube_url: youtubeUrl.trim(),
         payment_window_minutes: Math.max(1, Math.min(180, parseInt(paymentWindow, 10) || 15)),
         payment_instructions: paymentInstructions.trim(),
         xp_lesson: Math.max(0, parseInt(xpLesson, 10) || 50),
@@ -358,6 +364,43 @@ export default function AdminSettingsClient({ initialSettings }: AdminSettingsCl
                 value={supportTelegram}
                 onChange={(e) => setSupportTelegram(e.target.value)}
                 placeholder="https://t.me/newerasupport_bot"
+                className="w-full bg-black border border-white/15 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white transition"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-white/70 uppercase mb-2 font-bold flex items-center justify-between">
+                <span>Yopiq Telegram Kanal Havolasi (90%+ Natija Uchun)</span>
+                <span className="text-[10px] text-pink-400 font-bold">Imtihondan o‘tgach ochiladi</span>
+              </label>
+              <input
+                type="text"
+                value={telegramChannel}
+                onChange={(e) => setTelegramChannel(e.target.value)}
+                placeholder="https://t.me/+AbCdEfGhIjK..."
+                className="w-full bg-black border border-white/15 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-pink-500 transition font-bold"
+              />
+              <span className="text-[11px] text-white/40 mt-1 block">Talaba dars testidan 90% yoki undan yuqori to‘plaganda ushbu kanal havolasi ko‘rsatiladi.</span>
+            </div>
+
+            <div>
+              <label className="block text-white/70 uppercase mb-2 font-bold">Instagram Sahifa Havolasi</label>
+              <input
+                type="text"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://instagram.com/newera_trading"
+                className="w-full bg-black border border-white/15 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-white/70 uppercase mb-2 font-bold">YouTube Kanal Havolasi</label>
+              <input
+                type="text"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://youtube.com/@newera_trading"
                 className="w-full bg-black border border-white/15 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white transition"
               />
             </div>

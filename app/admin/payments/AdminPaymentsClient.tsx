@@ -194,29 +194,23 @@ export default function AdminPaymentsClient({ initialPayments }: AdminPaymentsCl
 
     setIsProcessing(true);
     try {
-      const res = await fetch('/api/payment/submit-receipt', {
+      const res = await fetch('/api/admin/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          paymentId: `manual_${Date.now()}`,
-          orderId: `NE-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(100000 + Math.random() * 900000)}`,
           courseId: manualCourse,
-          amount: Number(manualAmount) || 279000,
+          amount: Number(manualAmount) || (manualCourse.includes('2222') ? 499000 : 299000),
           provider: manualProvider,
           firstName: manualName.split(' ')[0] || 'Treyder',
           lastName: manualName.split(' ').slice(1).join(' ') || '',
           phone: manualPhone,
-          receiptUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="100%" height="100%" fill="%23111"/><rect x="20" y="20" width="560" height="360" fill="none" stroke="%23fff" stroke-width="2"/><text x="40" y="60" fill="%23fff" font-family="monospace" font-size="20" font-weight="bold">NEW ERA MANUAL PAYMENT</text><text x="40" y="120" fill="%23aaa" font-family="monospace" font-size="14">STATUS: ADMIN CREATED</text></svg>',
+          status: manualStatus,
           comment: manualComment || 'Admin tomonidan qo‘lda yaratildi',
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Qo‘shishda xatolik');
-
-      if (manualStatus === 'approved' && data.payment?.id) {
-        await handleApprove(data.payment.id);
-      }
 
       toast.success('To\'lov muvaffaqiyatli qo\'shildi!');
       setShowAddModal(false);
@@ -722,15 +716,13 @@ export default function AdminPaymentsClient({ initialPayments }: AdminPaymentsCl
                       value={manualCourse}
                       onChange={(e) => {
                         setManualCourse(e.target.value);
-                        if (e.target.value.includes('3333')) setManualAmount('999000');
-                        else if (e.target.value.includes('2222')) setManualAmount('279000');
-                        else setManualAmount('149000');
+                        if (e.target.value.includes('2222')) setManualAmount('499000');
+                        else setManualAmount('299000');
                       }}
                       className="w-full bg-black border border-white/15 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-white transition"
                     >
-                      <option value="11111111-1111-1111-1111-111111111111">STANDARD (299k)</option>
-                      <option value="22222222-2222-2222-2222-222222222222">PRO TRADING (599k)</option>
-                      <option value="33333333-3333-3333-3333-333333333333">VIP MENTORLIK (999k)</option>
+                      <option value="11111111-1111-1111-1111-111111111111">STANDARD (299 000 so‘m)</option>
+                      <option value="22222222-2222-2222-2222-222222222222">PRO TRADING (499 000 so‘m)</option>
                     </select>
                   </div>
 

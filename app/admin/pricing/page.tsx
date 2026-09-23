@@ -10,7 +10,7 @@ export default async function AdminPricingPage() {
 
   const pricing = settings.pricing || {
     standard: { daily: 19000, monthly: 299000, yearly: 2499000 },
-    pro: { daily: 39000, monthly: 599000, yearly: 4999000 },
+    pro: { daily: 39000, monthly: 499000, yearly: 4999000 },
   };
 
   const cards = settings.cards || [

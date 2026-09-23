@@ -234,6 +234,9 @@ function AdminCreateLessonForm() {
     }
 
     let finalVideoUrl = videoUrl.trim();
+    if (finalVideoUrl && !finalVideoUrl.includes('://') && !finalVideoUrl.startsWith('/api/')) {
+      finalVideoUrl = 'https://' + finalVideoUrl;
+    }
     if (videoSourceType === 'file' && videoFile && !videoUrl) {
       if (videoFile.size > 6 * 1024 * 1024) {
         toast.error('Fayl hajmi 6MB dan katta. Serverless cheklovi sababli YouTube havolasidan foydalaning!');
@@ -351,9 +354,15 @@ function AdminCreateLessonForm() {
                   Video Havolasi (YouTube URL yoki to&apos;g&apos;ridan-to&apos;g&apos;ri MP4 link) *
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    if (val.trim() && !val.includes('://') && (val.includes('youtube.com') || val.includes('youtu.be') || val.includes('.mp4') || val.includes('vimeo.com'))) {
+                      val = 'https://' + val.trim();
+                    }
+                    setVideoUrl(val);
+                  }}
                   placeholder="https://www.youtube.com/watch?v=... yoki https://youtu.be/... yoki https://...mp4"
                   className="w-full bg-black/60 border border-white/15 rounded-xl px-4 py-3.5 text-white text-sm font-mono focus:outline-none focus:border-emerald-500 transition placeholder:text-white/20"
                 />

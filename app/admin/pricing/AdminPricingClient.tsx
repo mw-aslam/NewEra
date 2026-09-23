@@ -273,7 +273,7 @@ export default function AdminPricingClient({
             <div>
               <label className="block text-[11px] font-mono font-bold uppercase tracking-wider text-white/50 mb-1.5 flex items-center justify-between">
                 <span>Oylik Tarif (30 kun) — Asosiy</span>
-                <span className="text-emerald-400 text-[10px]">Tavsiya etilgan: 599 000 so‘m</span>
+                <span className="text-emerald-400 text-[10px]">Tavsiya etilgan: 499 000 so‘m</span>
               </label>
               <div className="relative">
                 <input
