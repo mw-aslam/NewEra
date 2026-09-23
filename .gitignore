@@ -36,6 +36,7 @@ yarn-error.log*
 next-env.d.ts
 
 # local database, session secret and uploaded media — never commit user data
-/data
+/data/*
+!data/db.json
 /private
 /public/uploads

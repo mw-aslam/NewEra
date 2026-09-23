@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import { DB_DIR as SHARED_DB_DIR } from '@/lib/paths';
 import path from 'path';
 
@@ -679,6 +680,19 @@ function loadDatabase(): LocalDatabase {
       cachedMtimeMs = mtime;
       return cachedDb;
     }
+
+    // In serverless / tmp fallback, check if a bundled seed db.json exists in process.cwd()/data/db.json
+    const bundledDb = path.join(process.cwd(), 'data', 'db.json');
+    if (bundledDb !== DB_FILE && fs.existsSync(bundledDb)) {
+      try {
+        const raw = fs.readFileSync(bundledDb, 'utf-8');
+        cachedDb = migrate(JSON.parse(raw));
+        saveDatabase(cachedDb);
+        return cachedDb;
+      } catch (bundleErr) {
+        console.error('[local-db] failed to seed from bundled db.json:', bundleErr);
+      }
+    }
   } catch (err) {
     console.error('[local-db] read failed, starting from an empty database:', err);
   }
@@ -698,7 +712,19 @@ function saveDatabase(db: LocalDatabase) {
     fs.renameSync(tmp, DB_FILE);
     cachedMtimeMs = dbMtime();
   } catch (err) {
-    console.error('[local-db] write failed:', err);
+    console.error('[local-db] write failed to DB_DIR:', err);
+    // If saving to DB_DIR failed (e.g. read-only filesystem), fallback to os.tmpdir()
+    try {
+      const fallbackDir = path.join(os.tmpdir(), 'newera_data', 'data');
+      if (!fs.existsSync(fallbackDir)) fs.mkdirSync(fallbackDir, { recursive: true });
+      const fallbackTmp = path.join(fallbackDir, `.db.${process.pid}.${Date.now()}.tmp`);
+      const fallbackFile = path.join(fallbackDir, 'db.json');
+      fs.writeFileSync(fallbackTmp, JSON.stringify(db, null, 2), { encoding: 'utf-8', mode: 0o600 });
+      fs.renameSync(fallbackTmp, fallbackFile);
+      console.log('[local-db] successfully saved database to fallback tmp dir:', fallbackFile);
+    } catch (fallbackErr) {
+      console.error('[local-db] emergency fallback write to tmp also failed:', fallbackErr);
+    }
   }
 }
 
