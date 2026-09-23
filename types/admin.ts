@@ -62,8 +62,10 @@ export interface AdminModuleOption {
 export interface AdminLessonOption {
   id: string;
   title: string;
+  module_id?: string | null;
   moduleTitle?: string | null;
   courseTitle?: string | null;
+  hasTest?: boolean;
 }
 
 /** One answer inside the test builder. */
