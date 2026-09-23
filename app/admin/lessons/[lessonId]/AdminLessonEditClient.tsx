@@ -23,7 +23,8 @@ import {
   Plus,
   Check,
   Award,
-  AlertTriangle
+  AlertTriangle,
+  Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -458,34 +459,34 @@ export default function AdminLessonEditClient({
               </div>
             </div>
 
-            {/* Tab 1: Video URL (YouTube, Vimeo, MP4) */}
+            {/* Tab 1: Video URL (Telegram Guruh/Kanal, YouTube, MP4) */}
             {videoSourceType === 'url' ? (
               <div className="space-y-5">
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 leading-relaxed space-y-1">
-                  <p className="font-bold flex items-center gap-1.5 text-emerald-400">
-                    <Sparkles size={14} /> Eng qulay va tavsiya etilgan usul:
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-pink-500/10 via-black to-emerald-500/10 border border-pink-500/25 text-xs text-white/80 leading-relaxed space-y-1.5 shadow-md">
+                  <p className="font-bold flex items-center gap-1.5 text-pink-400">
+                    <Send size={14} /> Telegram Guruh/Kanal yoki Video Havolasi:
                   </p>
                   <p>
-                    Videoni YouTube-ga <strong>&quot;Dostup po ssylke&quot; (Unlisted / Yashirin havola)</strong> qilib yuklang va quyidagi maydonga havolani joylashtiring. Bu usulda hech qanday hajm cheklovi yo&apos;q, video talabalar uchun tezyurar HD formatda yuklanadi va bufering bo&apos;lmaydi!
+                    Dars videosi yuklangan <strong>Telegram yopiq guruhi / kanali havolasini</strong> (masalan: <code>https://t.me/...</code> yoki <code>https://t.me/kanal_nomi/123</code>) yoki to‘g‘ridan-to‘g‘ri video linkini (MP4 / YouTube) kiriting. Talaba darsga kirganda <strong>&quot;Videoni Telegramda Ko‘rish&quot;</strong> tugmasi orqali o‘sha kanal/guruhdagi dars videosini ko‘radi va testni topshiradi!
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-mono uppercase text-white/70 mb-2 font-bold">
-                    Video Havolasi (YouTube URL yoki to&apos;g&apos;ridan-to&apos;g&apos;ri MP4 link) *
+                    Video Havolasi (Telegram Guruh/Kanal havolasi, MP4 yoki video link) *
                   </label>
                   <input
                     type="text"
                     value={videoUrl}
                     onChange={(e) => {
                       let val = e.target.value;
-                      if (val.trim() && !val.includes('://') && (val.includes('youtube.com') || val.includes('youtu.be') || val.includes('.mp4') || val.includes('vimeo.com'))) {
+                      if (val.trim() && !val.includes('://') && (val.includes('t.me') || val.includes('telegram.me') || val.includes('youtube.com') || val.includes('youtu.be') || val.includes('.mp4') || val.includes('vimeo.com'))) {
                         val = 'https://' + val.trim();
                       }
                       setVideoUrl(val);
                     }}
-                    placeholder="https://www.youtube.com/watch?v=... yoki https://youtu.be/... yoki https://...mp4"
-                    className="w-full bg-black/60 border border-white/15 rounded-xl px-4 py-3.5 text-white text-sm font-mono focus:outline-none focus:border-emerald-500 transition placeholder:text-white/20"
+                    placeholder="https://t.me/... yoki https://...mp4 yoki https://www.youtube.com/..."
+                    className="w-full bg-black/60 border border-white/15 rounded-xl px-4 py-3.5 text-white text-sm font-mono focus:outline-none focus:border-pink-500 transition placeholder:text-white/20"
                   />
                 </div>
 
@@ -529,7 +530,7 @@ export default function AdminLessonEditClient({
                   </div>
                 </div>
 
-                {/* Live Preview for YouTube or direct URL */}
+                {/* Live Preview for YouTube, Telegram or direct URL */}
                 {videoUrl && (
                   <div className="space-y-2 pt-2">
                     <span className="text-xs font-mono text-white/60 block font-bold uppercase">
@@ -544,6 +545,24 @@ export default function AdminLessonEditClient({
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                         />
+                      ) : /t\.me|telegram\.me/.test(videoUrl) ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-3 bg-gradient-to-br from-pink-950/40 via-black to-[#0c0c14]">
+                          <div className="w-12 h-12 rounded-2xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400">
+                            <Send size={24} />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-sm font-black text-white font-mono uppercase">Telegram Guruh/Kanal Video Havolasi</div>
+                            <div className="text-xs text-white/50 max-w-sm font-mono truncate">{videoUrl}</div>
+                          </div>
+                          <a
+                            href={videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 rounded-xl bg-pink-500 text-white font-black text-xs uppercase tracking-wider font-mono hover:bg-pink-600 transition"
+                          >
+                            Telegramda ochib ko‘rish
+                          </a>
+                        </div>
                       ) : (
                         <video
                           src={videoUrl}

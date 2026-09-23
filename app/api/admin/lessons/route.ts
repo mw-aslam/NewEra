@@ -65,7 +65,9 @@ export async function POST(request: NextRequest) {
 
     const provider =
       parsed.data.video_provider ||
-      (/youtube\.com|youtu\.be/.test(parsed.data.video_url)
+      (/t\.me|telegram\.me/.test(parsed.data.video_url)
+        ? 'telegram'
+        : /youtube\.com|youtu\.be/.test(parsed.data.video_url)
         ? 'youtube'
         : parsed.data.video_url.startsWith('/api/video/') ||
             parsed.data.video_url.startsWith('/uploads/')

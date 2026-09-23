@@ -329,6 +329,7 @@ export default function VideoPlayerClient({
   }, [save]);
 
   const isEmbeddable = provider === 'youtube' && youtubeId(videoUrl);
+  const isTelegram = provider === 'telegram' || /t\.me|telegram\.me/.test(videoUrl);
 
   return (
     <div data-protected-notice className="space-y-4">
@@ -344,6 +345,52 @@ export default function VideoPlayerClient({
           </div>
         ) : isEmbeddable ? (
           <div id={`yt-player-${lessonId}`} className="h-full w-full" />
+        ) : isTelegram ? (
+          <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center space-y-4 bg-gradient-to-br from-pink-950/25 via-black to-[#09090e]">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shadow-2xl">
+              <Send size={28} />
+            </div>
+            <div className="space-y-1.5 max-w-md">
+              <h3 className="text-base sm:text-lg font-black text-white font-mono uppercase tracking-wide">
+                Dars Videosi Telegram Yopiq Guruhida
+              </h3>
+              <p className="text-xs text-white/60 leading-relaxed font-sans">
+                Ushbu dars videosi platformaning yopiq Telegram guruhi / kanalida joylashtirilgan. Videoni ko‘rish uchun quyidagi havola orqali o‘ting:
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+              <a
+                href={videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  save(duration || 600, false);
+                  setPercentage(100);
+                  toast.success('Dars videosi ochildi');
+                }}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs uppercase tracking-wider font-mono shadow-xl transition transform hover:scale-[1.02]"
+              >
+                <Send size={15} />
+                <span>Videoni Telegramda Ko‘rish</span>
+              </a>
+
+              {percentage < watchRequirement && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    save(duration || 600, false);
+                    setPercentage(100);
+                    toast.success('Dars ko‘rildi deb belgilandi va test ochildi!');
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs font-mono font-bold transition"
+                >
+                  <CheckCircle2 size={14} className="text-emerald-400" />
+                  <span>Videoni ko‘rdim (Testni ochish)</span>
+                </button>
+              )}
+            </div>
+          </div>
         ) : (
           <video
             ref={videoRef}
