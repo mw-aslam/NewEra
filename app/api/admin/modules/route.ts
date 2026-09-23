@@ -10,8 +10,19 @@ export async function GET(request: NextRequest) {
     await requireAdminApi();
     const courseId = new URL(request.url).searchParams.get('courseId') || undefined;
 
+    let rawModules = await db.getModules(courseId);
+    if (!rawModules.length) {
+      try {
+        const { seedCatalog } = await import('@/lib/content/seed');
+        await seedCatalog();
+        rawModules = await db.getModules(courseId);
+      } catch (seedErr) {
+        console.error('[modules] auto-seed error:', seedErr);
+      }
+    }
+
     const modules = await Promise.all(
-      (await db.getModules(courseId)).map(async (module) => ({
+      rawModules.map(async (module) => ({
         ...module,
         lessonCount: (await db.getLessons(module.id)).length,
         courseTitle: (await db.getCourse(module.course_id))?.title || null,

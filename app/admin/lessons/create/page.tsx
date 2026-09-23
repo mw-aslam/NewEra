@@ -32,6 +32,9 @@ function AdminCreateLessonForm() {
 
   const [loading, setLoading] = useState(false);
   const [modules, setModules] = useState<AdminModuleOption[]>([]);
+  const [courses, setCourses] = useState<{ id: string; title: string; level?: string }[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(preSelectedCourseId || 'all');
+  const [loadingModules, setLoadingModules] = useState<boolean>(true);
 
   // Form Fields
   const [moduleId, setModuleId] = useState(preSelectedModuleId);
@@ -67,27 +70,51 @@ function AdminCreateLessonForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAbortRef = useRef<boolean>(false);
 
-  useEffect(() => {
-    async function loadModules() {
-      try {
-        const res = await fetch('/api/admin/modules', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = await res.json();
+  const loadModules = async () => {
+    setLoadingModules(true);
+    try {
+      const res = await fetch('/api/admin/modules', { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
 
-        // Shape kept as { id, title, courses: { title, level } } for the picker.
-        const list: AdminModuleOption[] = (data.modules || []).map((m: AdminModuleOption & { courseTitle?: string; level?: string }) => ({
-          id: m.id,
-          title: m.title,
-          course_id: m.course_id,
-          courses: { id: m.course_id, title: m.courseTitle, level: m.level },
-        }));
+      // Shape kept as { id, title, courses: { title, level } } for the picker.
+      const list: AdminModuleOption[] = (data.modules || []).map((m: AdminModuleOption & { courseTitle?: string; level?: string }) => ({
+        id: m.id,
+        title: m.title,
+        course_id: m.course_id,
+        courses: { id: m.course_id, title: m.courseTitle, level: m.level },
+      }));
 
-        setModules(list);
-        if (!moduleId && list.length > 0) setModuleId(list[0].id);
-      } catch {
-        toast.error('Modullar ro\u2018yxatini yuklab bo\u2018lmadi');
+      setModules(list);
+
+      // Extract unique courses for filtering
+      const courseMap = new Map<string, { id: string; title: string; level?: string }>();
+      list.forEach((m) => {
+        if (m.course_id && m.courses?.title && !courseMap.has(m.course_id)) {
+          courseMap.set(m.course_id, {
+            id: m.course_id,
+            title: m.courses.title,
+            level: m.courses.level || undefined,
+          });
+        }
+      });
+      setCourses(Array.from(courseMap.values()));
+
+      if (list.length > 0) {
+        if (preSelectedModuleId && list.some((m) => m.id === preSelectedModuleId)) {
+          setModuleId(preSelectedModuleId);
+        } else if (!moduleId) {
+          setModuleId(list[0].id);
+        }
       }
+    } catch {
+      toast.error('Modullar ro‘yxatini yuklab bo‘lmadi');
+    } finally {
+      setLoadingModules(false);
     }
+  };
+
+  useEffect(() => {
     loadModules();
   }, [preSelectedModuleId, preSelectedCourseId]);
 
@@ -613,23 +640,90 @@ function AdminCreateLessonForm() {
             2. Dars Ma&apos;lumotlari va Tavsifi
           </h2>
 
+          {/* Module Explainer Banner */}
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-xs text-white/80 space-y-1.5 leading-relaxed">
+            <p className="font-bold text-emerald-400 flex items-center gap-1.5">
+              <Sparkles size={14} /> Modul nima?
+            </p>
+            <p>
+              <strong>Modul</strong> — bu darslarning bobi (asosiy mavzusi). Masalan: <em>1. Trading nima?</em>, <em>2. MT5</em>, <em>3. Forex asoslari</em>, <em>4. Brokerlar</em> va h.k.
+              Quyida darsingiz tegishli bo‘lgan kurs va modulni tanlang:
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Course Filter */}
             <div>
-              <label className="block text-xs font-mono uppercase text-white/60 mb-1.5">Tegishli modul *</label>
+              <label className="block text-xs font-mono uppercase text-white/60 mb-1.5 font-bold">
+                1. Kursni tanlang
+              </label>
               <select
-                required
-                value={moduleId}
-                onChange={(e) => setModuleId(e.target.value)}
+                value={selectedCourseId}
+                onChange={(e) => {
+                  const newCId = e.target.value;
+                  setSelectedCourseId(newCId);
+                  const available = newCId === 'all'
+                    ? modules
+                    : modules.filter((m) => m.course_id === newCId);
+                  if (available.length > 0) {
+                    setModuleId(available[0].id);
+                  }
+                }}
                 className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition"
               >
-                {modules.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.courses?.title} ({m.courses?.level}) — {m.title}
+                <option value="all">Barcha kurslar ({modules.length} ta modul)</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title} {c.level ? `(${c.level})` : ''}
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* Module Picker */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-mono uppercase text-white/60 font-bold">
+                  2. Tegishli modul (Bob) *
+                </label>
+                {modules.length === 0 && !loadingModules && (
+                  <button
+                    type="button"
+                    onClick={loadModules}
+                    className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 font-mono"
+                  >
+                    <RefreshCw size={10} /> Qayta yuklash
+                  </button>
+                )}
+              </div>
+              <select
+                required
+                value={moduleId}
+                onChange={(e) => setModuleId(e.target.value)}
+                disabled={loadingModules}
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition disabled:opacity-50"
+              >
+                {loadingModules ? (
+                  <option value="">Modullar yuklanmoqda...</option>
+                ) : (selectedCourseId === 'all' ? modules : modules.filter((m) => m.course_id === selectedCourseId)).length === 0 ? (
+                  <option value="">Modullar mavjud emas</option>
+                ) : (
+                  (selectedCourseId === 'all' ? modules : modules.filter((m) => m.course_id === selectedCourseId)).map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.courses?.title ? `${m.courses.title} — ` : ''}{m.title}
+                    </option>
+                  ))
+                )}
+              </select>
+              {modules.length > 0 && (
+                <span className="text-[11px] text-white/40 font-mono mt-1 block">
+                  Tanlangan: {(selectedCourseId === 'all' ? modules : modules.filter((m) => m.course_id === selectedCourseId)).find(m => m.id === moduleId)?.title || moduleId}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
             <div>
               <label className="block text-xs font-mono uppercase text-white/60 mb-1.5">Dars tartib raqami (#)</label>
               <input
