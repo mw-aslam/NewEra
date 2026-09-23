@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import Link from 'next/link';
-import { Lock, PlayCircle, CheckCircle2, AlertTriangle, Loader2, EyeOff } from 'lucide-react';
+import { Lock, PlayCircle, CheckCircle2, AlertTriangle, Loader2, EyeOff, Send, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 /** The slice of the YouTube IFrame API this player actually uses. */
@@ -62,6 +62,7 @@ interface Props {
   viewerName: string;
   viewerEmail: string;
   viewerId: string;
+  telegramChannelUrl?: string;
 }
 
 const SAVE_INTERVAL_MS = 5000;
@@ -98,6 +99,7 @@ export default function VideoPlayerClient({
   viewerName,
   viewerEmail,
   viewerId,
+  telegramChannelUrl,
 }: Props) {
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -425,27 +427,51 @@ export default function VideoPlayerClient({
             Bu dars uchun test hali qo‘shilmagan. Darsni ko‘rib chiqing va keyingi darsga o‘ting.
           </p>
         ) : testPassed ? (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="flex items-center gap-2 text-[13px] font-semibold text-emerald-300">
-              <CheckCircle2 size={15} />
-              Test topshirildi — {testScore}%
-            </p>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="flex items-center gap-2 text-[13px] font-semibold text-emerald-300">
+                <CheckCircle2 size={15} />
+                Test topshirildi — {testScore}%
+              </p>
 
-            {nextLessonId && !nextLessonLocked ? (
-              <Link
-                href={`/lesson/${nextLessonId}`}
-                className="rounded-xl bg-white px-5 py-2.5 text-center text-[11px] font-black uppercase tracking-wider text-black transition hover:bg-white/90"
+              {nextLessonId && !nextLessonLocked ? (
+                <Link
+                  href={`/lesson/${nextLessonId}`}
+                  className="rounded-xl bg-white px-5 py-2.5 text-center text-[11px] font-black uppercase tracking-wider text-black transition hover:bg-white/90"
+                >
+                  Keyingi dars
+                </Link>
+              ) : (
+                <Link
+                  href={`/course/${courseId}`}
+                  className="rounded-xl border border-white/15 px-5 py-2.5 text-center text-[11px] font-black uppercase tracking-wider text-white transition hover:border-white/35"
+                >
+                  Kursga qaytish
+                </Link>
+              )}
+            </div>
+
+            {/* Telegram Channel Button for completed test */}
+            <div className="p-3.5 rounded-xl border border-pink-500/30 bg-gradient-to-r from-pink-950/20 via-black to-emerald-950/20 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-2 text-left">
+                <div className="w-8 h-8 rounded-lg bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0">
+                  <Sparkles size={14} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white leading-tight">Yopiq Telegram Kanalga Kirish</div>
+                  <div className="text-[10px] text-white/50">Test topshirildi — tahlillar va mentor kanaliga ulaning</div>
+                </div>
+              </div>
+              <a
+                href={telegramChannelUrl || 'https://t.me/newera_trading'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-[11px] uppercase tracking-wider hover:opacity-95 transition shrink-0"
               >
-                Keyingi dars
-              </Link>
-            ) : (
-              <Link
-                href={`/course/${courseId}`}
-                className="rounded-xl border border-white/15 px-5 py-2.5 text-center text-[11px] font-black uppercase tracking-wider text-white transition hover:border-white/35"
-              >
-                Kursga qaytish
-              </Link>
-            )}
+                <Send size={13} />
+                <span>Kanalga Kirish</span>
+              </a>
+            </div>
           </div>
         ) : unlocked ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

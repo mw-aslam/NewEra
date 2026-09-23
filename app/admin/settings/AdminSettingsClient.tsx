@@ -370,8 +370,8 @@ export default function AdminSettingsClient({ initialSettings }: AdminSettingsCl
 
             <div className="sm:col-span-2">
               <label className="block text-white/70 uppercase mb-2 font-bold flex items-center justify-between">
-                <span>Yopiq Telegram Kanal Havolasi (90%+ Natija Uchun)</span>
-                <span className="text-[10px] text-pink-400 font-bold">Imtihondan o‘tgach ochiladi</span>
+                <span>Yopiq Telegram Kanal Havolasi (Testni yechgan talabalar uchun)</span>
+                <span className="text-[10px] text-pink-400 font-bold">Test topshirilgach ochiladi</span>
               </label>
               <input
                 type="text"
@@ -380,7 +380,7 @@ export default function AdminSettingsClient({ initialSettings }: AdminSettingsCl
                 placeholder="https://t.me/+AbCdEfGhIjK..."
                 className="w-full bg-black border border-white/15 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-pink-500 transition font-bold"
               />
-              <span className="text-[11px] text-white/40 mt-1 block">Talaba dars testidan 90% yoki undan yuqori to‘plaganda ushbu kanal havolasi ko‘rsatiladi.</span>
+              <span className="text-[11px] text-white/40 mt-1 block">Talaba dars testini yechganidan so‘ng ushbu Telegram kanal havolasi ko‘rsatiladi.</span>
             </div>
 
             <div>

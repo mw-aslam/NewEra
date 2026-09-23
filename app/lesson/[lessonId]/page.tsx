@@ -103,6 +103,12 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
           viewerName={auth.profile.full_name}
           viewerEmail={auth.profile.email}
           viewerId={auth.profile.id}
+          telegramChannelUrl={
+            (lesson as { telegram_channel_url?: string }).telegram_channel_url ||
+            settings.telegram_channel_url ||
+            settings.support_telegram ||
+            'https://t.me/newera_trading'
+          }
         />
 
         {/* Summary (TZ §7.3) */}

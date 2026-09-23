@@ -198,22 +198,24 @@ export default function TestClient({
           </div>
         )}
 
-        {/* 90%+ Score: Telegram Channel Gateway */}
-        {result.passed && result.score >= 90 && result.telegramChannelUrl && (
+        {/* Telegram Channel Gateway after passing test */}
+        {result.passed && (
           <div className="rounded-2xl border border-pink-500/40 bg-gradient-to-r from-pink-950/30 via-black to-emerald-950/30 p-6 text-center space-y-3 shadow-xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 text-[11px] font-mono font-bold uppercase tracking-wider">
               <Sparkles size={13} className="text-pink-400" />
-              90%+ Natija: Yopiq Kanal Ochildi!
+              {result.score >= 90 ? '90%+ Natija: Yopiq Kanal Ochildi!' : 'Test Muvaffaqiyatli Topshirildi!'}
             </div>
             <h3 className="text-base sm:text-lg font-black text-white">
-              Tabriklaymiz! Siz 90% dan yuqori natija ko‘rsatdingiz
+              {result.score >= 90
+                ? 'Tabriklaymiz! Siz 90% dan yuqori natija ko‘rsatdingiz'
+                : 'Tabriklaymiz! Testdan muvaffaqiyatli o‘tdingiz'}
             </h3>
             <p className="text-xs text-white/60 max-w-md mx-auto leading-relaxed">
               Maxsus amaliy tahlillar, mentor tavsiyalari va muhokamalar olib boriladigan rasmiy Telegram kanaliga qo‘shiling:
             </p>
             <div className="pt-2">
               <a
-                href={result.telegramChannelUrl}
+                href={result.telegramChannelUrl || 'https://t.me/newera_trading'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-xs uppercase tracking-wider shadow-lg hover:opacity-95 transition transform hover:scale-[1.02]"
